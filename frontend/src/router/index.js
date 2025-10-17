@@ -10,6 +10,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
+
+
 const routes = [
     {
         path: '/login',
@@ -17,6 +19,7 @@ const routes = [
         component: () => import('../views/Login.vue'),
         meta: { requiresGuest: true }
     },
+    
     {
         path: '/register',
         name: 'Register',

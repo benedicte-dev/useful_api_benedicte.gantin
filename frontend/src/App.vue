@@ -4,7 +4,7 @@
         <header v-if="isAuthenticated" class="app-header">
             <nav class="app-nav">
                 <router-link to="/dashboard" class="nav-link">Tableau de Bord</router-link>
-                <button @click="handleLogout" class="logout-btn">Déconnexion</button>
+                
             </nav>
         </header>
 
