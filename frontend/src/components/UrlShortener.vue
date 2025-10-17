@@ -1,72 +1,125 @@
 <template>
-    <div class="dashboard-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>Modules</h2>
-            </div>
+    <div class="widget-container">
+        <div class="widget-header">
+            <h2>Raccourcisseur d'URL</h2>
+        </div>
 
-            <nav class="sidebar-nav">
-                <ul class="modules-list">
-                    <li
-                        v-for="module in modulesList"
-                        :key="module.id"
-                        class="module-item"
-                        :class="{ 'active': module.active }"
-                    >
-                        <div class="module-content">
-                            <span class="module-name">{{ module.name }}</span>
-                            <button
-                                @click="toggleModule(module.id)"
-                                :disabled="moduleStore.loading"
-                                :class="['btn-toggle', module.active ? 'active' : 'inactive']"
-                            >
-                                {{ module.active ? 'Désactiver' : 'Activer' }}
+        <div class="widget-content">
+            <!-- Formulaire de création -->
+            <div class="creation-section">
+                <h3>Créer un nouveau lien court</h3>
+                <form @submit.prevent="handleCreateLink" class="creation-form">
+                    <div class="form-group">
+                        <label>URL originale *</label>
+                        <input v-model="form.original_url" type="url" required placeholder="https://example.com"
+                            :disabled="urlStore.loading">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Code personnalisé (optionnel)</label>
+                        <input v-model="form.custom_code" type="text" placeholder="mon-lien" maxlength="10"
+                            :disabled="urlStore.loading">
+                        <small>Max 10 caractères (lettres, chiffres, -, _)</small>
+                    </div>
+
+                    <button type="submit" :disabled="urlStore.loading || !form.original_url" class="btn-primary">
+                        {{ urlStore.loading ? 'Création...' : 'Créer le lien court' }}
+                    </button>
+                </form>
+
+                <!-- Lien créé avec succès -->
+                <div v-if="createdLink" class="success-card">
+                    <h4>Lien créé avec succès !</h4>
+                    <div class="link-result">
+                        <div class="link-original">
+                            <strong>URL originale :</strong> {{ createdLink.original_url }}
+                        </div>
+                        <div class="link-short">
+                            <strong>Lien court :</strong>
+                            <a :href="getShortUrl(createdLink.code)" target="_blank" class="short-url">
+                                {{ getShortUrl(createdLink.code) }}
+                            </a>
+                            <button @click="copyToClipboard(getShortUrl(createdLink.code))" class="btn-copy">
+                                Copier
                             </button>
                         </div>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
-
-        <!-- Contenu principal -->
-        <main class="main-content">
-            <header class="content-header">
-                <h1>Tableau de Bord</h1>
-                <div class="user-actions">
-                    <span class="user-info">Utilisateur #{{ authStore.user?.id }}</span>
-                    <button @click="handleLogout" class="btn-logout">Déconnexion</button>
-                </div>
-            </header>
-
-            <div class="content-area">
-                <!-- Aucun module activé -->
-                <div v-if="!hasActiveModules" class="welcome-section">
-                    <div class="welcome-card">
-                        <h2>Bienvenue sur votre Dashboard</h2>
-                        <p>Activez un module dans la sidebar pour commencer à l'utiliser.</p>
-                    </div>
-                </div>
-
-                <!-- Modules activés -->
-                <div v-else class="modules-grid">
-                    <!-- URL Shortener -->
-                    <div v-if="isModuleActive(1)" class="module-widget">
-                        <UrlShortenerWidget />
-                    </div>
-
-                    <!-- Wallet -->
-                    <div v-if="isModuleActive(2)" class="module-widget">
-                        <WalletWidget />
-                    </div>
-
-                    <!-- Time Tracker -->
-                    <div v-if="isModuleActive(4)" class="module-widget">
-                        <TimeTrackerWidget />
                     </div>
                 </div>
             </div>
-        </main>
+
+            <!-- Statistiques -->
+            <div v-if="urlStore.links.length > 0" class="stats-section">
+                <h3>Statistiques</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ urlStore.links.length }}</div>
+                        <div class="stat-label">Liens créés</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ urlStore.totalClicks }}</div>
+                        <div class="stat-label">Total des clics</div>
+                    </div>
+                    <div v-if="urlStore.mostPopularLink" class="stat-card">
+                        <div class="stat-number">{{ urlStore.mostPopularLink.clicks }}</div>
+                        <div class="stat-label">Clics sur le lien populaire</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des liens -->
+            <div class="links-section">
+                <div class="section-header">
+                    <h3>Mes liens courts</h3>
+                    <button @click="refreshLinks" :disabled="urlStore.loading" class="btn-refresh">
+                        Actualiser
+                    </button>
+                </div>
+
+                <div v-if="urlStore.loading && urlStore.links.length === 0" class="loading">
+                    Chargement des liens...
+                </div>
+
+                <div v-else-if="urlStore.links.length === 0" class="empty-state">
+                    <p>Aucun lien créé pour le moment</p>
+                    <p>Créez votre premier lien court ci-dessus !</p>
+                </div>
+
+                <div v-else class="links-list">
+                    <div v-for="link in urlStore.links" :key="link.id" class="link-item">
+                        <div class="link-info">
+                            <div class="link-original">
+                                <strong>{{ truncateUrl(link.original_url) }}</strong>
+                            </div>
+                            <div class="link-short">
+                                <a :href="getShortUrl(link.code)" target="_blank" class="short-url">
+                                    {{ getShortUrl(link.code) }}
+                                </a>
+                                <button @click="copyToClipboard(getShortUrl(link.code))" class="btn-copy-small"
+                                    title="Copier le lien">
+                                    Copier
+                                </button>
+                            </div>
+                            <div class="link-meta">
+                                <span class="clicks">{{ link.clicks }} clics</span>
+                                <span class="date">Créé le {{ formatDate(link.created_at) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="link-actions">
+                            <button @click="handleDeleteLink(link.id)" :disabled="urlStore.loading" class="btn-delete"
+                                title="Supprimer le lien">
+                                Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Erreurs -->
+            <div v-if="urlStore.error" class="error-message">
+                {{ urlStore.error }}
+            </div>
+        </div>
     </div>
 </template>
 

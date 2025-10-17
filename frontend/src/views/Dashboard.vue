@@ -27,7 +27,6 @@
             <header class="content-header">
                 <h1>Tableau de Bord</h1>
                 <div class="user-actions">
-                    <span class="user-info">Utilisateur #{{ authStore.user?.id }}</span>
                     <button @click="handleLogout" class="btn-logout">Déconnexion</button>
                 </div>
             </header>
@@ -37,7 +36,7 @@
                 <div v-if="!hasActiveModules" class="welcome-section">
                     <div class="welcome-card">
                         <h2>Bienvenue sur votre Dashboard</h2>
-                        
+
                     </div>
                 </div>
 
@@ -45,17 +44,19 @@
                 <div v-else class="modules-grid">
                     <!-- URL Shortener -->
                     <div v-if="isModuleActive(1)" class="module-widget">
-                        <UrlShortenerWidget />
+                        <router-link to="/wallet"></router-link>
+                        <UrlShortener/>
                     </div>
 
                     <!-- Wallet -->
                     <div v-if="isModuleActive(2)" class="module-widget">
-                        <WalletWidget />
+
+                        <Wallet/>
                     </div>
 
                     <!-- Time Tracker -->
                     <div v-if="isModuleActive(4)" class="module-widget">
-                        <TimeTrackerWidget />
+                        <TimeTracker/>
                     </div>
                 </div>
             </div>
@@ -76,7 +77,7 @@ const authStore = useAuthStore()
 const moduleStore = useModuleStore()
 const router = useRouter()
 
-// Liste des modules à afficher (seulement les 3 demandés)
+// Liste des modules à afficher
 const modulesList = computed(() => {
     const allowedModules = [
         { id: 1, name: 'URL Shortener' },

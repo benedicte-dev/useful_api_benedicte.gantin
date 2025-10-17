@@ -1,12 +1,3 @@
-// import { createRouter, createWebHistory } from 'vue-router'
-
-// const router = createRouter({
-//     history: createWebHistory(import.meta.env.BASE_URL),
-//     routes: [],
-// })
-
-// export default router
-
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
@@ -19,7 +10,7 @@ const routes = [
         component: () => import('../views/Login.vue'),
         meta: { requiresGuest: true }
     },
-    
+
     {
         path: '/register',
         name: 'Register',
@@ -30,6 +21,20 @@ const routes = [
         path: '/dashboard',
         name: 'Dashboard',
         component: () => import('../views/Dashboard.vue'),
+        meta: { requiresAuth: true }
+    },
+
+    {
+        path: '/urlshortener',
+        name: 'urlshortener',
+        component: () => import('../components/UrlShortener.vue'),
+        meta: { requiresAuth: true }
+    },
+
+    {
+        path: '/wallet',
+        name: 'Wallet',
+        component: () => import('../components/Wallet.vue'),
         meta: { requiresAuth: true }
     },
     {

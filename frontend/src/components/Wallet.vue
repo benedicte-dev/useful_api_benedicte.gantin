@@ -63,9 +63,7 @@
                 <div v-else class="transactions-list">
                     <div v-for="transaction in walletStore.recentTransactions" :key="transaction.id"
                         class="transaction-item" :class="getTransactionClass(transaction)">
-                        <div class="transaction-icon">
-                            {{ getTransactionIcon(transaction) }}
-                        </div>
+
                         <div class="transaction-details">
                             <div class="transaction-type">{{ getTransactionType(transaction) }}</div>
                             <div class="transaction-meta">
